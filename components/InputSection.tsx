@@ -4,6 +4,7 @@ import { GlossToken } from '../types';
 
 interface InputSectionProps {
   onSubmit: (text: string) => void;
+  onQuickLoad: (text: string) => void;
   onImport: (tokens: GlossToken[]) => void;
   isLoading: boolean;
 }
@@ -40,7 +41,7 @@ const SPECIAL_CHARS = [
   { char: 'Ƿ', label: 'Ƿ' },
 ];
 
-export const InputSection: React.FC<InputSectionProps> = ({ onSubmit, onImport, isLoading }) => {
+export const InputSection: React.FC<InputSectionProps> = ({ onSubmit, onQuickLoad, onImport, isLoading }) => {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +170,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ onSubmit, onImport, 
             spellCheck={false}
           />
           
-          <div className="mt-6 flex justify-between items-center">
+          <div className="mt-4 flex justify-between items-center">
             {/* Import Button */}
             <div className="relative">
               <input 
@@ -190,30 +191,47 @@ export const InputSection: React.FC<InputSectionProps> = ({ onSubmit, onImport, 
               </button>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={!text.trim() || isLoading}
-              className={`
-                px-8 py-3 rounded-lg font-semibold text-white shadow-md flex items-center gap-2
-                transition-all duration-300 transform active:scale-95
-                ${!text.trim() || isLoading 
-                  ? 'bg-parchment-400 cursor-not-allowed opacity-70' 
-                  : 'bg-parchment-700 hover:bg-parchment-800 hover:shadow-lg hover:-translate-y-0.5'}
-              `}
-            >
-              {isLoading ? (
-                <>
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Analysing...
-                </>
-              ) : (
-                <>
-                  <span>Gloss Text</span>
-                  <Feather size={18} />
-                </>
-              )}
-            </button>
+            {/* Right-side buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => { if (text.trim()) onQuickLoad(text); }}
+                disabled={!text.trim() || isLoading}
+                className={`
+                  px-5 py-3 rounded-lg font-semibold shadow-md flex items-center gap-2
+                  transition-all duration-300 transform active:scale-95
+                  ${!text.trim() || isLoading
+                    ? 'bg-parchment-200 text-parchment-400 cursor-not-allowed opacity-70'
+                    : 'bg-parchment-200 text-parchment-800 hover:bg-parchment-300 hover:shadow-lg hover:-translate-y-0.5'}
+                `}
+              >
+                Gloss Words On Demand
+              </button>
+
+              <button
+                type="submit"
+                disabled={!text.trim() || isLoading}
+                className={`
+                  px-8 py-3 rounded-lg font-semibold text-white shadow-md flex items-center gap-2
+                  transition-all duration-300 transform active:scale-95
+                  ${!text.trim() || isLoading
+                    ? 'bg-parchment-400 cursor-not-allowed opacity-70'
+                    : 'bg-parchment-700 hover:bg-parchment-800 hover:shadow-lg hover:-translate-y-0.5'}
+                `}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Analysing...
+                  </>
+                ) : (
+                  <>
+                    <span>Gloss Entire Text</span>
+                    <Feather size={18} />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

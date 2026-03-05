@@ -1,4 +1,6 @@
 
+export type AIProvider = 'claude';
+
 export interface GlossToken {
   original: string;
   modernTranslation: string;
@@ -8,6 +10,7 @@ export interface GlossToken {
   etymology: string;
   isPunctuation: boolean;
   isFlagged?: boolean;
+  isAnalyzed?: boolean;
   sources?: { title: string; uri: string }[];
 }
 

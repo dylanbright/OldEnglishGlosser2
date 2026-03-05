@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { GlossToken } from '../types';
 import { BookMarked, ExternalLink, Library, Bookmark, Edit2, Check, X, Sparkles, Loader2, Link as LinkIcon } from 'lucide-react';
-import { deepAnalyzeToken } from '../services/geminiService';
+import { deepAnalyzeToken } from '../services/claudeService';
 
 interface GlossaryPanelProps {
   token: GlossToken | null;
@@ -12,12 +12,12 @@ interface GlossaryPanelProps {
   onUpdateToken?: (updates: Partial<GlossToken>) => void;
 }
 
-export const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ 
-  token, 
+export const GlossaryPanel: React.FC<GlossaryPanelProps> = ({
+  token,
   context = "",
-  isFlagged = false, 
+  isFlagged = false,
   onToggleFlag,
-  onUpdateToken
+  onUpdateToken,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeepLoading, setIsDeepLoading] = useState(false);
@@ -63,7 +63,7 @@ export const GlossaryPanel: React.FC<GlossaryPanelProps> = ({
     setIsDeepLoading(true);
     try {
       const result = await deepAnalyzeToken(token, context);
-      onUpdateToken({ ...result.updates, sources: result.sources });
+      onUpdateToken({ ...result.updates, sources: result.sources, isAnalyzed: true });
     } catch (error) {
       alert("The deep search encountered a storm in the North Sea. Please try again later.");
     } finally {
@@ -98,6 +98,32 @@ export const GlossaryPanel: React.FC<GlossaryPanelProps> = ({
         </div>
         <h3 className="text-lg font-semibold mb-2 text-parchment-700">Punctuation</h3>
         <p className="text-sm">Syntactic separator.</p>
+      </div>
+    );
+  }
+
+  if (token.isAnalyzed === false) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-parchment-500 p-8 text-center border-l border-parchment-300/50 bg-parchment-100/50">
+        <h2 className="text-5xl font-serif font-bold text-parchment-900 mb-3">{token.original}</h2>
+        <p className="text-sm text-parchment-500 italic mb-6">Not yet analyzed.</p>
+        <button
+          onClick={handleDeepCheck}
+          disabled={isDeepLoading}
+          className={`
+            flex items-center gap-2 px-4 py-2 rounded-full border transition-all text-sm font-bold uppercase tracking-wide
+            ${isDeepLoading
+              ? 'bg-parchment-200 text-parchment-400 cursor-not-allowed'
+              : 'bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100'}
+          `}
+        >
+          {isDeepLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Sparkles size={14} />
+          )}
+          Analyze with AI
+        </button>
       </div>
     );
   }
