@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { InputSection } from './components/InputSection';
 import { GlossView } from './components/GlossView';
-import { analyzeOldEnglishText } from './services/geminiService';
+import { analyzeOldEnglishText } from './services/claudeService';
 import { AppState, GlossToken } from './types';
 import { AlertCircle } from 'lucide-react';
 
@@ -30,6 +30,40 @@ const App: React.FC = () => {
     });
   };
 
+  const tokenizeRaw = (text: string): GlossToken[] => {
+    const tokens: GlossToken[] = [];
+    const lines = text.split('\n');
+    lines.forEach((line, lineIdx) => {
+      const matches = line.matchAll(/\p{L}+(-\p{L}+)*|[^\s]/gu);
+      for (const match of matches) {
+        const word = match[0];
+        const isPunc = !/\p{L}/u.test(word);
+        tokens.push({
+          original: word,
+          modernTranslation: '', lemma: '', partOfSpeech: '',
+          grammaticalInfo: '', etymology: '',
+          isPunctuation: isPunc,
+          isAnalyzed: isPunc ? true : false,
+        });
+      }
+      if (lineIdx < lines.length - 1) {
+        tokens.push({
+          original: '\n', modernTranslation: 'Line Break', lemma: 'N/A',
+          partOfSpeech: 'Formatting', grammaticalInfo: 'N/A', etymology: 'N/A',
+          isPunctuation: true, isAnalyzed: true,
+        });
+      }
+    });
+    return tokens;
+  };
+
+  const handleQuickLoad = (text: string) => {
+    const tokens = cleanTokens(tokenizeRaw(text));
+    setGlossTokens(tokens);
+    setAppState(AppState.GLOSSING);
+    setErrorMsg(null);
+  };
+
   const handleAnalyze = async (text: string) => {
     setAppState(AppState.LOADING);
     setErrorMsg(null);
@@ -40,7 +74,8 @@ const App: React.FC = () => {
       setAppState(AppState.GLOSSING);
     } catch (err) {
       console.error(err);
-      setErrorMsg("Failed to analyze text. Please try again or check your API configuration.");
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(`Analysis failed: ${msg}`);
       setAppState(AppState.ERROR);
     }
   };
@@ -137,10 +172,11 @@ const App: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')]"></div>
 
         {appState === AppState.INPUT && (
-          <InputSection 
-            onSubmit={handleAnalyze} 
+          <InputSection
+            onSubmit={handleAnalyze}
+            onQuickLoad={handleQuickLoad}
             onImport={handleImport}
-            isLoading={false} 
+            isLoading={false}
           />
         )}
 
@@ -158,11 +194,15 @@ const App: React.FC = () => {
         )}
 
         {appState === AppState.ERROR && (
-          <div className="max-w-md mx-auto mt-24 p-6 bg-red-50 border border-red-200 rounded-xl flex flex-col items-center text-center animate-in zoom-in-95">
+          <div className="max-w-lg mx-auto mt-24 p-6 bg-red-50 border border-red-200 rounded-xl flex flex-col items-center text-center animate-in zoom-in-95">
             <AlertCircle size={48} className="text-red-500 mb-4" />
-            <h3 className="text-lg font-bold text-red-800 mb-2">Translation Error</h3>
-            <p className="text-red-600 mb-6">{errorMsg}</p>
-            <button 
+            <h3 className="text-lg font-bold text-red-800 mb-2">Analysis Failed</h3>
+            <p className="text-red-700 mb-3">The AI returned an unexpected response. This can happen with longer texts — please try again.</p>
+            <details className="w-full mb-6 text-left">
+              <summary className="text-xs text-red-400 cursor-pointer hover:text-red-600 select-none">Technical details</summary>
+              <pre className="mt-2 text-xs text-red-500 bg-red-100 rounded p-3 overflow-auto whitespace-pre-wrap break-all">{errorMsg}</pre>
+            </details>
+            <button
               onClick={() => setAppState(AppState.INPUT)}
               className="px-6 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded-lg transition-colors"
             >
@@ -172,8 +212,8 @@ const App: React.FC = () => {
         )}
 
         {appState === AppState.GLOSSING && (
-          <GlossView 
-            tokens={glossTokens} 
+          <GlossView
+            tokens={glossTokens}
             onToggleFlag={handleToggleFlag}
             onUpdateToken={handleUpdateToken}
           />

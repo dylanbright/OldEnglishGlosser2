@@ -161,7 +161,7 @@ export const GlossView: React.FC<GlossViewProps> = ({ tokens, onToggleFlag, onUp
       </div>
 
       <div className="h-64 lg:h-auto lg:w-[400px] xl:w-[480px] flex-shrink-0 z-20 shadow-2xl lg:shadow-none">
-        <GlossaryPanel 
+        <GlossaryPanel
           token={activeIndex !== null ? tokens[activeIndex] : null}
           context={activeIndex !== null ? getContextAt(activeIndex) : undefined}
           isFlagged={activeIndex !== null ? !!tokens[activeIndex]?.isFlagged : false}
