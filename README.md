@@ -2,70 +2,75 @@
 
 An interactive, AI-powered philological tool designed for students and scholars of Old English. This application provides instant morphological analysis, definitions, and etymological data for ancient texts.
 
-## 📜 Overview
+## Overview
 
-The **Hwæt! Glosser** allows users to paste Old English text (e.g., *Beowulf*, *The Wanderer*) and receive a word-by-word gloss. It leverages the Google Gemini API to perform deep philological analysis and provides a specialized "Deep Check" feature that cross-references scholarly sources like the Bosworth-Toller dictionary and Wiktionary using Google Search grounding.
+The **Hwæt! Glosser** allows users to paste Old English text (e.g., *Beowulf*, *The Wanderer*) and receive a word-by-word gloss. It uses the Anthropic Claude API (Haiku for speed, Sonnet as fallback) to perform deep philological analysis, with a "Deep Check" feature that cross-references scholarly sources like the Bosworth-Toller dictionary.
 
-## ✨ Features
+## Features
 
-- **Instant Analysis**: Automatically segments text into tokens and provides grammar, lemma, and translation.
-- **Deep Check (AI Grounded)**: Uses Google Search grounding to verify information against authoritative Old English resources.
+- **Gloss Entire Text**: Automatically segments text into tokens and provides grammar, lemma, translation, and etymology for every word.
+- **Gloss Words On Demand**: Load text without an upfront API call, then analyze individual words as needed.
+- **Deep Check**: Re-analyze any word with a dedicated AI call for more accurate philological data.
 - **Philological Keyboard**: A custom toolbar for inserting Old English characters (æ, þ, ð, ƿ) and macrons (ā, ē, ī, etc.).
-- **Study List**: Flag difficult words to create a custom study list.
-- **Anki Export**: Export your flagged words to a CSV formatted specifically for flashcard software.
-- **Persistence**: Save your analysis as a JSON file and reload it later to pick up where you left off.
-- **Responsive Design**: A parchment-themed, high-aesthetics UI that works across desktop and mobile.
+- **Study List**: Flag difficult words to create a custom study list with Anki CSV export.
+- **Persistence**: Save your analysis as JSON and reload it later. Append additional analysis files to an existing session.
+- **Responsive Design**: A parchment-themed UI that works across desktop and mobile.
 
-## 🛠 Requirements
+## Requirements
 
-### 1. Gemini API Key
-This application requires a Google Gemini API Key. 
-- Obtain a key from [Google AI Studio](https://aistudio.google.com/).
-- The application expects the key to be provided via the environment variable `process.env.API_KEY`.
+### Anthropic API Key
+This application requires an Anthropic API key.
+- Obtain a key from [Anthropic Console](https://console.anthropic.com/).
+- Create a `.env` file in the project root with: `ANTHROPIC_API_KEY=your-key-here`
 
-### 2. Environment
-- **Runtime**: Modern web browser with ES6 module support.
-- **Dependencies**: 
-  - `React 19`
-  - `Tailwind CSS`
-  - `Lucide React`
-  - `@google/genai` (SDK for Gemini API)
+### Environment
+- **Runtime**: Node.js (for Vite dev server)
+- **Dependencies**:
+  - React 19
+  - Vite 6
+  - Tailwind CSS
+  - Lucide React
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
-Since this project uses modern ES modules and import maps, it can be served with any simple static file server.
-
-1. **Clone the project** to your local root directory.
-2. **Environment Configuration**: Ensure `process.env.API_KEY` is set in your build or execution environment.
-3. **Run a local server**:
+1. **Clone the project**:
    ```bash
-   # Using Python
-   python -m http.server 8000
-   
-   # Using Node.js (npx)
-   npx serve .
+   git clone https://github.com/dylanbright/OldEnglishGlosser2.git
+   cd OldEnglishGlosser2
    ```
-4. **Access the app**: Open `http://localhost:8000` in your browser.
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Configure your API key**:
+   ```bash
+   echo "ANTHROPIC_API_KEY=your-key-here" > .env
+   ```
+4. **Start the dev server**:
+   ```bash
+   npm run dev
+   ```
+5. **Open** `http://localhost:3000` in your browser.
 
-## 📖 Usage Guide
+The Vite dev server proxies `/anthropic-api` requests to the Anthropic API, so no separate backend is needed.
 
-1. **Input Text**: Paste your Old English text into the main textarea. Use the character toolbar if you need to type specific characters.
-2. **Gloss**: Click "Gloss Text" to begin the AI analysis. For long texts, the app will automatically chunk the request to ensure high-quality output.
-3. **Explore**: Click on any word in the analyzed text to see its details in the right-hand panel.
-4. **Deep Check**: If a word's definition seems unclear, click "Check Again with AI" in the panel. This will trigger a grounded search of Bosworth-Toller and Wiktionary.
-5. **Study**: Use the flag icon to save words. Use the "Export CSV" button in the Study List to download your data for Anki.
+## Usage Guide
 
-## ⚖️ Technical Architecture
+1. **Input Text**: Paste your Old English text into the main textarea. Use the character toolbar for special characters.
+2. **Choose a mode**:
+   - **Gloss Entire Text**: Sends the full text to Claude for bulk analysis. Long texts are automatically chunked by word count to stay within API limits.
+   - **Gloss Words On Demand**: Loads the text immediately and lets you analyze individual words by clicking them.
+3. **Explore**: Click any word in the analyzed text to see its details in the side panel (lemma, part of speech, morphology, etymology).
+4. **Deep Check**: Click "Analyze with AI" in the panel to re-analyze a word with a dedicated API call.
+5. **Study**: Flag words with the bookmark icon, then export your flagged words as CSV for Anki.
 
-- **Model**: Primarily uses `gemini-3-flash-preview` for its balance of speed and complex reasoning.
-- **Grounding**: Implements `googleSearch` tools for real-time verification of philological data.
-- **Persistence**: Implements client-side JSON serialization for "Save/Load" functionality without a backend database.
-- **Aesthetics**: Custom Tailwind theme with a "Parchment" color palette and "Crimson Pro" serif typography.
+## Technical Architecture
 
-## 📜 Philological Sources
-While the initial gloss is provided by AI training data, the **Deep Check** feature specifically targets:
-- **Bosworth-Toller**: The definitive Anglo-Saxon Dictionary.
-- **Wiktionary**: For modern community-driven etymological tracking.
+- **AI Models**: Claude Haiku (primary, for speed) with Claude Sonnet as fallback. Retry logic handles transient failures.
+- **Chunking**: Text is split into chunks of ~20 words to prevent output token limit truncation. Whitespace and newlines are preserved.
+- **API Proxy**: Vite dev server proxies requests to `api.anthropic.com` to avoid CORS issues in the browser.
+- **Persistence**: Client-side JSON serialization for save/load without a backend database.
+- **Aesthetics**: Custom Tailwind theme with a "Parchment" color palette and serif typography.
 
 ---
 *"Swa scribende gesceap hweorfað gleomen gumena geond grund fela..."*
